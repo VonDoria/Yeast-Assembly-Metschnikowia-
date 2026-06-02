@@ -122,27 +122,11 @@ run_trimmomatic() {
         ILLUMINACLIP:"${TRIMMOMATIC_ADAPTERS}":2:30:10:2:keepBothReads LEADING:3 TRAILING:3 MINLEN:36
 }
 
-run_assembly_and_eval() {
+refining_contigs(){
     local INPUT_R1=$1
     local INPUT_R2=$2
     local SPAdes_OUT=$3
-    local QUAST_OUT=$4
-    local PARAMS=$5
 
-    if [ -f "${SPAdes_OUT}/contigs.fasta" ]; then
-        echo "[SKIP] SPAdes em ${SPAdes_OUT} já concluído."
-    else
-        mkdir -p "${SPAdes_OUT}"
-        echo "[SPAdes] Montando em ${SPAdes_OUT}..."
-        ../programs/SPAdes-4.2.0-Linux/bin/spades.py \
-            -1 "${INPUT_R1}" \
-            -2 "${INPUT_R2}" \
-            -o "${SPAdes_OUT}" \
-            -m "${MEMORY}" \
-            -t "${THREADS}" \
-            "${PARAMS}"
-    fi
-    
     local CONTIGS="${SPAdes_OUT}/contigs.fasta"
     local FINAL_BAM="${SPAdes_OUT}/assemble_mapping.bam"
     local REPORT="${SPAdes_OUT}/assemble_coverage.txt"
@@ -165,13 +149,63 @@ run_assembly_and_eval() {
         echo "Relatório de cobertura salvo em: ${REPORT}"
     fi
 
+    local CLEAN_CONTIGS="${SPAdes_OUT}/clean_contigs.fasta"
+    local CLEAN_FINAL_BAM="${SPAdes_OUT}/clean_assemble_mapping.bam"
+    local CLEAN_REPORT="${SPAdes_OUT}/clean_assemble_coverage.txt"
+
+    echo "[SKIP] Filtrando contigs menores que 500 Pb."
+    seqtk seq -L 500 "${CONTIGS}" > "${CLEAN_CONTIGS}"
+
+    if [ -f "$CLEAN_REPORT" ]; then
+        echo "[SKIP] Filtragem de reads para ${SPAdes_OUT} já concluídos."
+    else
+        bwa index "${CLEAN_CONTIGS}"
+
+        echo "[BWA + Samtools] Mapeando reads e gerando BAM ordenado..."
+        bwa mem -t ${THREADS} "${CLEAN_CONTIGS}" "${INPUT_R1}" "${INPUT_R2}" | \
+            samtools view -@ ${THREADS} -b - | \
+            samtools sort -@ ${THREADS} -o "${CLEAN_FINAL_BAM}" -
+
+        echo "[Samtools] Indexando o BAM ordenado..."
+        samtools index "${CLEAN_FINAL_BAM}"
+
+        echo "[Samtools] Calculando a cobertura..."
+        samtools coverage "${CLEAN_FINAL_BAM}" > "${CLEAN_REPORT}"
+        echo "Relatório de cobertura salvo em: ${CLEAN_REPORT}"
+    fi
+
+}
+
+run_assembly_and_eval() {
+    local INPUT_R1=$1
+    local INPUT_R2=$2
+    local SPAdes_OUT=$3
+    local QUAST_OUT=$4
+    local PARAMS=$5
+
+    if [ -f "${SPAdes_OUT}/contigs.fasta" ]; then
+        echo "[SKIP] SPAdes em ${SPAdes_OUT} já concluído."
+    else
+        mkdir -p "${SPAdes_OUT}"
+        echo "[SPAdes] Montando em ${SPAdes_OUT}..."
+        ../programs/SPAdes-4.2.0-Linux/bin/spades.py \
+            -1 "${INPUT_R1}" \
+            -2 "${INPUT_R2}" \
+            -o "${SPAdes_OUT}" \
+            -m "${MEMORY}" \
+            -t "${THREADS}" \
+            "${PARAMS}"
+    fi
+    
+    refining_contigs "${INPUT_R1}" "${INPUT_R2}" "${SPAdes_OUT}"
+    
     if [ -f "${QUAST_OUT}/report.txt" ]; then
         echo "[SKIP] QUAST em ${QUAST_OUT} já concluído."
     else
         mkdir -p "${QUAST_OUT}"
         echo "[QUAST] Avaliando montagem em ${QUAST_OUT}..."
         ../programs/quast-5.3.0/quast.py \
-            "${SPAdes_OUT}/contigs.fasta" \
+            "${SPAdes_OUT}/clean_contigs.fasta" \
             -o "${QUAST_OUT}" \
             -t "${THREADS}"
     fi
@@ -287,19 +321,27 @@ echo "--------------------------------------------------"
 echo "Avaliando completude das montagens (BUSCO)"
 
 run_busco_assembly \
-    "${OUTPUT_DIR}/SPAdes_results/fastp_reads_careful/contigs.fasta" \
+    "${OUTPUT_DIR}/SPAdes_results/fastp_reads_careful/clean_contigs.fasta" \
     "${OUTPUT_DIR}/BUSCO_results/fastp_reads_careful"
 
 run_busco_assembly \
-    "${OUTPUT_DIR}/SPAdes_results/fastp_reads_isolate/contigs.fasta" \
+    "${OUTPUT_DIR}/SPAdes_results/fastp_reads_isolate/clean_contigs.fasta" \
     "${OUTPUT_DIR}/BUSCO_results/fastp_reads_isolate"
 
 run_busco_assembly \
-    "${OUTPUT_DIR}/SPAdes_results/trimmomatic_reads_careful/contigs.fasta" \
+    "${OUTPUT_DIR}/SPAdes_results/raw_reads_careful/clean_contigs.fasta" \
+    "${OUTPUT_DIR}/BUSCO_results/raw_reads_careful"
+
+run_busco_assembly \
+    "${OUTPUT_DIR}/SPAdes_results/raw_reads_isolate/clean_contigs.fasta" \
+    "${OUTPUT_DIR}/BUSCO_results/raw_reads_isolate"
+
+run_busco_assembly \
+    "${OUTPUT_DIR}/SPAdes_results/trimmomatic_reads_careful/clean_contigs.fasta" \
     "${OUTPUT_DIR}/BUSCO_results/trimmomatic_reads_careful"
 
 run_busco_assembly \
-    "${OUTPUT_DIR}/SPAdes_results/trimmomatic_reads_isolate/contigs.fasta" \
+    "${OUTPUT_DIR}/SPAdes_results/trimmomatic_reads_isolate/clean_contigs.fasta" \
     "${OUTPUT_DIR}/BUSCO_results/trimmomatic_reads_isolate"
 
 

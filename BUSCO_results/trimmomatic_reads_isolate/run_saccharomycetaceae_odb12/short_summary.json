@@ -20,7 +20,7 @@
         "tar": "False",
         "opt-out-run-stats": "False",
         "plot_percentages": "False",
-        "in": "/home/italofaria/y7002/SPAdes_results/trimmomatic_reads_isolate/contigs.fasta",
+        "in": "/home/italofaria/y7002/SPAdes_results/trimmomatic_reads_isolate/clean_contigs.fasta",
         "out": "./BUSCO_results/trimmomatic_reads_isolate",
         "mode": "euk_genome_min",
         "lineage_dataset": "/home/italofaria/y7002/busco_downloads/lineages/saccharomycetaceae_odb12",
@@ -71,19 +71,19 @@
         "avg_identity": 0.56,
         "internal_stop_codon_count": 597,
         "internal_stop_codon_percent": 47.2,
-        "Number of scaffolds": "1526",
-        "Number of contigs": "1526",
-        "Total length": "11587545",
+        "Number of scaffolds": "88",
+        "Number of contigs": "88",
+        "Total length": "11371407",
         "Percent gaps": "0.000%",
-        "Scaffold N50": "476298",
-        "Contigs N50": "476298"
+        "Scaffold N50": "522024",
+        "Contigs N50": "522024"
     },
     "metrics": {
-        "Number of scaffolds": "1526",
-        "Number of contigs": "1526",
-        "Total length": "11587545",
+        "Number of scaffolds": "88",
+        "Number of contigs": "88",
+        "Total length": "11371407",
         "Percent gaps": "0.000%",
-        "Scaffold N50": "476298",
-        "Contigs N50": "476298"
+        "Scaffold N50": "522024",
+        "Contigs N50": "522024"
     }
 }

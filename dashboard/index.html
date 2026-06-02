@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Genomic Assembly Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <script src="dashboard_data.js"></script>
+    <style>
+        .scrollbar-discreta::-webkit-scrollbar { height: 8px; width: 8px; }
+        .scrollbar-discreta::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        .scrollbar-discreta::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
+        .scrollbar-discreta::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+        mark.highlight { background-color: #facc15; color: #111827; border-radius: 2px; padding: 0 2px; }
+        .modal-active { overflow: hidden; }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans antialiased min-h-screen">
+
+    <div class="max-w-[1500px] mx-auto p-4 md:p-8 space-y-6">
+
+        <header class="bg-white shadow-md rounded-xl p-6 border-l-4 border-indigo-600 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Integrated Genomic Report</h1>
+                <p class="text-gray-500 mt-1">Unified Analysis: FastQC, SPAdes, QUAST, and BUSCO</p>
+            </div>
+            <div class="w-full md:w-1/3 relative">
+                <input type="text" id="global-search" placeholder="🔍 Search sample across all tables..." 
+                       class="w-full p-3 pl-10 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all">
+            </div>
+        </header>
+
+        <div class="border-b border-gray-300 mb-6">
+            <nav class="flex space-x-6" aria-label="Tabs">
+                <button onclick="switchTab('tab-resultados')" id="btn-tab-resultados" class="tab-btn px-2 py-3 font-semibold text-base border-b-4 border-indigo-600 text-indigo-700 focus:outline-none">Results Tables</button>
+                <button onclick="switchTab('tab-logs')" id="btn-tab-logs" class="tab-btn px-2 py-3 font-semibold text-base border-b-4 border-transparent text-gray-500 hover:text-gray-800 focus:outline-none">Console Logs</button>
+            </nav>
+        </div>
+
+        <div id="tab-resultados" class="tab-content space-y-8">
+            
+            <div class="bg-white shadow-sm rounded-xl p-6 overflow-hidden">
+                <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">1. Quality Control (FastQC)</h2>
+                <div class="overflow-x-auto scrollbar-discreta">
+                    <table class="w-full text-left border-collapse table-searchable">
+                        <thead class="bg-gray-50 text-gray-600 text-sm">
+                            <tr>
+                                <th class="p-3 border-b">Sample / Scenario</th>
+                                <th class="p-3 border-b text-center">Total Sequences</th>
+                                <th class="p-3 border-b text-center">Sequence Length</th>
+                                <th class="p-3 border-b text-center">Total Bases</th>
+                                <th class="p-3 border-b text-center">%GC</th>
+                                <th class="p-3 border-b text-center">Per Base Sequence Quality</th>
+                                <th class="p-3 border-b text-center">Adapter Content</th>
+                            </tr>
+                        </thead>
+                        <tbody id="fastqc-tbody" class="text-sm"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="bg-white shadow-sm rounded-xl p-6 overflow-hidden">
+                <div class="flex justify-between items-center mb-4 border-b pb-2">
+                    <h2 class="text-xl font-bold text-gray-800">2. Assembly Coverage (SPAdes / samtools coverage)</h2>
+                    <span class="text-xs bg-indigo-100 text-indigo-800 px-2 py-1 rounded font-medium">Contigs ≥ 500bp (Mean Values)</span>
+                </div>
+                <p class="text-xs text-gray-500 mb-3 italic">Tip: Click on a row to view the parameter distribution Boxplots.</p>
+                <div class="overflow-x-auto scrollbar-discreta">
+                    <table class="w-full text-left border-collapse table-searchable">
+                        <thead class="bg-indigo-50 text-indigo-900 text-sm">
+                            <tr>
+                                <th class="p-3 border-b">Assembly</th>
+                                <th class="p-3 border-b text-center">startpos</th>
+                                <th class="p-3 border-b text-center">endpos</th>
+                                <th class="p-3 border-b text-center">numreads</th>
+                                <th class="p-3 border-b text-center">covbases</th>
+                                <th class="p-3 border-b text-center">coverage (%)</th>
+                                <th class="p-3 border-b text-center font-bold">meandepth</th>
+                                <th class="p-3 border-b text-center">meanbaseq</th>
+                                <th class="p-3 border-b text-center">meanmapq</th>
+                            </tr>
+                        </thead>
+                        <tbody id="spades-tbody" class="text-sm"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="bg-white shadow-sm rounded-xl p-6 overflow-hidden">
+                <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">3. Contiguity Metrics (QUAST)</h2>
+                <div class="overflow-x-auto scrollbar-discreta">
+                    <table class="w-full text-left border-collapse table-searchable">
+                        <thead class="bg-emerald-50 text-emerald-900 text-sm">
+                            <tr>
+                                <th class="p-3 border-b">Assembly</th>
+                                <th class="p-3 border-b text-center">Total length</th>
+                                <th class="p-3 border-b text-center"># contigs</th>
+                                <th class="p-3 border-b text-center">Largest contig</th>
+                                <th class="p-3 border-b text-center">GC (%)</th>
+                                <th class="p-3 border-b text-center font-bold">N50</th>
+                                <th class="p-3 border-b text-center">N90</th>
+                                <th class="p-3 border-b text-center">L50</th>
+                                <th class="p-3 border-b text-center">L90</th>
+                            </tr>
+                        </thead>
+                        <tbody id="quast-tbody" class="text-sm"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="bg-white shadow-sm rounded-xl p-6 overflow-hidden">
+                <div class="flex justify-between items-center mb-4 border-b pb-2">
+                    <h2 class="text-xl font-bold text-gray-800">4. Genomic Completeness (BUSCO)</h2>
+                </div>
+                <p class="text-xs text-gray-500 mb-3 italic">Tip: Click on a row to view full run details.</p>
+                <div class="overflow-x-auto scrollbar-discreta">
+                    <table class="w-full text-left border-collapse table-searchable">
+                        <thead class="bg-amber-50 text-amber-900 text-sm">
+                            <tr>
+                                <th class="p-3 border-b w-1/4">Assembly</th>
+                                <th class="p-3 border-b">One Line Summary (C% [S%, D%], F%, M%, n)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="busco-tbody" class="text-sm"></tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+        <div id="tab-logs" class="tab-content hidden space-y-6">
+            <div class="bg-white shadow-sm rounded-xl p-6">
+                <h2 class="text-xl font-bold text-gray-900 mb-4 border-b pb-2">Central Console Logs</h2>
+                <div class="flex flex-col md:flex-row gap-4 mb-4">
+                    <select id="log-select" class="block w-full md:w-1/2 p-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-indigo-500">
+                        <option value="">-- Select a Log file to view --</option>
+                    </select>
+                    <input type="text" id="search-log" placeholder="🔍 Search text within active log..." class="w-full md:w-1/2 p-2 border border-gray-300 rounded-lg text-sm focus:ring-indigo-500">
+                </div>
+                <div class="relative bg-gray-900 rounded-xl shadow-inner border border-gray-800 p-4 h-[600px] overflow-y-auto scrollbar-discreta">
+                    <pre><code id="log-viewer" class="font-mono text-xs text-green-400 whitespace-pre-wrap break-words">The selected log content will stream here...</code></pre>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="modal-spades" class="fixed inset-0 bg-black bg-opacity-60 hidden z-50 flex items-center justify-center p-4 transition-opacity">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col">
+            <div class="p-5 border-b border-gray-200 flex justify-between items-center bg-gray-50 rounded-t-xl">
+                <h3 class="text-xl font-bold text-indigo-900" id="modal-spades-title">Coverage Distribution</h3>
+                <button onclick="closeModal('modal-spades')" class="text-gray-500 hover:text-red-500 text-2xl font-bold leading-none">&times;</button>
+            </div>
+            <div class="p-6 overflow-y-auto scrollbar-discreta flex-grow bg-gray-50">
+                <div id="spades-plots-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-busco" class="fixed inset-0 bg-black bg-opacity-60 hidden z-50 flex items-center justify-center p-4 transition-opacity">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
+            <div class="p-5 border-b border-gray-200 flex justify-between items-center bg-amber-50 rounded-t-xl">
+                <h3 class="text-xl font-bold text-amber-900" id="modal-busco-title">Full BUSCO Summary Results</h3>
+                <button onclick="closeModal('modal-busco')" class="text-gray-500 hover:text-red-500 text-2xl font-bold leading-none">&times;</button>
+            </div>
+            <div class="p-6 overflow-y-auto scrollbar-discreta flex-grow">
+                <table class="w-full text-left border-collapse text-sm">
+                    <tbody id="modal-busco-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ------------------------------------------------------------
+        // MAIN UTILITIES & TABS
+        // ------------------------------------------------------------
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('border-indigo-600', 'text-indigo-700', 'border-b-4');
+                btn.classList.add('border-transparent', 'text-gray-500');
+            });
+            document.getElementById(tabId).classList.remove('hidden');
+            const activeBtn = document.getElementById('btn-' + tabId);
+            activeBtn.classList.remove('border-transparent', 'text-gray-500');
+            activeBtn.classList.add('border-indigo-600', 'text-indigo-700', 'border-b-4');
+        }
+
+        function formatStatus(status) {
+            if (status === 'PASS') return `<span class="bg-green-100 text-green-800 px-2 py-1 rounded font-semibold">PASS</span>`;
+            if (status === 'WARN') return `<span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded font-semibold">WARN</span>`;
+            if (status === 'FAIL') return `<span class="bg-red-100 text-red-800 px-2 py-1 rounded font-semibold">FAIL</span>`;
+            return status;
+        }
+
+        function formatNumber(num) {
+            return typeof num === 'number' ? num.toLocaleString('en-US', { maximumFractionDigits: 2 }) : num;
+        }
+
+        // ------------------------------------------------------------
+        // GLOBAL FILTER (Affects all tables live)
+        // ------------------------------------------------------------
+        document.getElementById('global-search').addEventListener('input', function(e) {
+            const term = e.target.value.toLowerCase();
+            const tbodys = document.querySelectorAll('.table-searchable tbody');
+            
+            tbodys.forEach(tbody => {
+                const rows = tbody.querySelectorAll('tr');
+                rows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    row.style.display = text.includes(term) ? '' : 'none';
+                });
+            });
+        });
+
+        // ------------------------------------------------------------
+        // DATA POPULATION FROM JS VARIABLES
+        // ------------------------------------------------------------
+        function renderTables() {
+            // 1. FastQC
+            let htmlFastqc = '';
+            for (const [cenario, dados] of Object.entries(dadosProjeto.fastqc)) {
+                htmlFastqc += `
+                    <tr class="hover:bg-gray-100 border-b border-gray-200 transition-colors">
+                        <td class="p-3 font-medium text-gray-800">${cenario}</td>
+                        <td class="p-3 text-center">${dados.total_sequences}</td>
+                        <td class="p-3 text-center">${dados.sequence_length}</td>
+                        <td class="p-3 text-center">${dados.total_bases}</td>
+                        <td class="p-3 text-center">${dados.gc_content}</td>
+                        <td class="p-3 text-center">${formatStatus(dados.base_quality)}</td>
+                        <td class="p-3 text-center">${formatStatus(dados.adapters)}</td>
+                    </tr>`;
+            }
+            document.getElementById('fastqc-tbody').innerHTML = htmlFastqc;
+
+            // 2. SPAdes / Samtools coverage
+            let htmlSpades = '';
+            for (const [cenario, cols] of Object.entries(dadosProjeto.SPAdes)) {
+                if(!cols.coverage) continue;
+                htmlSpades += `
+                    <tr class="hover:bg-indigo-100 border-b border-indigo-50 cursor-pointer transition-colors" onclick="openSpadesModal('${cenario}')" title="Click to view Boxplots">
+                        <td class="p-3 font-medium text-indigo-900">${cenario}</td>
+                        <td class="p-3 text-center">${formatNumber(cols.startpos.mean)}</td>
+                        <td class="p-3 text-center">${formatNumber(cols.endpos.mean)}</td>
+                        <td class="p-3 text-center">${formatNumber(cols.numreads.mean)}</td>
+                        <td class="p-3 text-center">${formatNumber(cols.covbases.mean)}</td>
+                        <td class="p-3 text-center">${formatNumber(cols.coverage.mean)}</td>
+                        <td class="p-3 text-center font-bold text-indigo-700">${formatNumber(cols.meandepth.mean)}x</td>
+                        <td class="p-3 text-center">${formatNumber(cols.meanbaseq.mean)}</td>
+                        <td class="p-3 text-center">${formatNumber(cols.meanmapq.mean)}</td>
+                    </tr>`;
+            }
+            document.getElementById('spades-tbody').innerHTML = htmlSpades;
+
+            // 3. QUAST
+            let htmlQuast = '';
+            for (const [cenario, dados] of Object.entries(dadosProjeto.quast)) {
+                htmlQuast += `
+                    <tr class="hover:bg-emerald-100 border-b border-emerald-50 transition-colors">
+                        <td class="p-3 font-medium text-emerald-900">${cenario}</td>
+                        <td class="p-3 text-center">${dados.total_bp}</td>
+                        <td class="p-3 text-center">${dados.contigs_count}</td>
+                        <td class="p-3 text-center">${dados.largest_contig}</td>
+                        <td class="p-3 text-center">${dados['GC(%)']}</td>
+                        <td class="p-3 text-center font-bold text-emerald-700">${dados.n50}</td>
+                        <td class="p-3 text-center">${dados.n90}</td>
+                        <td class="p-3 text-center">${dados.l50}</td>
+                        <td class="p-3 text-center">${dados.l90}</td>
+                    </tr>`;
+            }
+            document.getElementById('quast-tbody').innerHTML = htmlQuast;
+
+            // 4. BUSCO
+            let htmlBusco = '';
+            for (const [cenario, dados] of Object.entries(dadosProjeto.busco)) {
+                htmlBusco += `
+                    <tr class="hover:bg-amber-100 border-b border-amber-50 cursor-pointer transition-colors" onclick="openBuscoModal('${cenario}')" title="Click to expand full summary data">
+                        <td class="p-3 font-medium text-amber-900">${cenario}</td>
+                        <td class="p-3 font-mono text-sm text-gray-700">${dados.one_line_summary}</td>
+                    </tr>`;
+            }
+            document.getElementById('busco-tbody').innerHTML = htmlBusco;
+        }
+
+        // ------------------------------------------------------------
+        // MODALS HANDLING & PLOTLY BOXPLOTS ENGINE
+        // ------------------------------------------------------------
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+            document.body.classList.remove('modal-active');
+        }
+
+        window.onclick = function(event) {
+            if (event.target.classList.contains('fixed')) {
+                closeModal(event.target.id);
+            }
+        }
+
+        function openBuscoModal(cenario) {
+            const data = dadosProjeto.busco[cenario];
+            document.getElementById('modal-busco-title').innerText = `BUSCO Run Metrics: ${cenario}`;
+            
+            let rows = '';
+            for (const [key, value] of Object.entries(data)) {
+                rows += `
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="p-3 font-semibold text-gray-700 capitalize w-1/2">${key.replace(/_/g, ' ')}</td>
+                        <td class="p-3 text-gray-900">${value}</td>
+                    </tr>`;
+            }
+            document.getElementById('modal-busco-tbody').innerHTML = rows;
+            
+            document.getElementById('modal-busco').classList.remove('hidden');
+            document.body.classList.add('modal-active');
+        }
+
+        function openSpadesModal(cenario) {
+            const stats = dadosProjeto.SPAdes[cenario];
+            document.getElementById('modal-spades-title').innerText = `Distribution Profiles (Contigs > 500bp): ${cenario}`;
+            
+            const grid = document.getElementById('spades-plots-grid');
+            grid.innerHTML = ''; 
+
+            const parametros = ["startpos", "endpos", "numreads", "covbases", "coverage", "meandepth", "meanbaseq", "meanmapq"];
+            const colors = ['#6366f1', '#8b5cf6', '#ec4899', '#f43f5e', '#f97316', '#eab308', '#22c55e', '#14b8a6'];
+
+            parametros.forEach((param, index) => {
+                const s = stats[param];
+                const divId = `plot-${param}`;
+                grid.innerHTML += `<div class="bg-white p-2 rounded shadow-sm border border-gray-200"><div id="${divId}" class="h-64"></div></div>`;
+                
+                const trace = {
+                    type: 'box',
+                    name: param.toUpperCase(),
+                    q1: [s.q1],
+                    median: [s.median],
+                    q3: [s.q3],
+                    lowerfence: [s.min],
+                    upperfence: [s.max],
+                    mean: [s.mean],
+                    sd: [s.std],
+                    marker: { color: colors[index] },
+                    boxpoints: false 
+                };
+
+                const layout = {
+                    margin: { t: 30, b: 20, l: 40, r: 10 },
+                    title: { text: param.toUpperCase(), font: { size: 14 } },
+                    yaxis: { automargin: true }
+                };
+
+                setTimeout(() => Plotly.newPlot(divId, [trace], layout, {displayModeBar: false, responsive: true}), 0);
+            });
+
+            document.getElementById('modal-spades').classList.remove('hidden');
+            document.body.classList.add('modal-active');
+        }
+
+        // ------------------------------------------------------------
+        // SYSTEM RUN LOG STREAM ENGINE & HIGHLIGHTING
+        // ------------------------------------------------------------
+        function renderLogs() {
+            const select = document.getElementById('log-select');
+            const viewer = document.getElementById('log-viewer');
+            const searchInput = document.getElementById('search-log');
+            
+            for (const key of Object.keys(dadosProjeto.logs)) {
+                const opt = document.createElement('option');
+                opt.value = key;
+                opt.textContent = key;
+                select.appendChild(opt);
+            }
+
+            let currentLogText = '';
+
+            select.addEventListener('change', (e) => {
+                const key = e.target.value;
+                currentLogText = key ? dadosProjeto.logs[key] : 'Select a log file above...';
+                searchInput.value = '';
+                viewer.textContent = currentLogText;
+            });
+
+            searchInput.addEventListener('input', (e) => {
+                const term = e.target.value;
+                if (!term || !currentLogText) { viewer.textContent = currentLogText; return; }
+                const escapedText = currentLogText.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                const regex = new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+                viewer.innerHTML = escapedText.replace(regex, '<mark class="highlight">$1</mark>');
+            });
+        }
+
+        // ------------------------------------------------------------
+        // DOM INITIALIZATION
+        // ------------------------------------------------------------
+        window.addEventListener('DOMContentLoaded', () => {
+            if (typeof dadosProjeto === 'undefined') {
+                alert("Critical Error: 'dadosProjeto' variable data schema was not loaded from dados_dashboard.js.");
+                return;
+            }
+            renderTables();
+            renderLogs();
+        });
+    </script>
+</body>
+</html>

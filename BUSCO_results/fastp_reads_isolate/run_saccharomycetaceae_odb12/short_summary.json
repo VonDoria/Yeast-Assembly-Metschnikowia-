@@ -20,7 +20,7 @@
         "tar": "False",
         "opt-out-run-stats": "False",
         "plot_percentages": "False",
-        "in": "/home/italofaria/y7002/SPAdes_results/fastp_reads_isolate/contigs.fasta",
+        "in": "/home/italofaria/y7002/SPAdes_results/fastp_reads_isolate/clean_contigs.fasta",
         "out": "./BUSCO_results/fastp_reads_isolate",
         "mode": "euk_genome_min",
         "lineage_dataset": "/home/italofaria/y7002/busco_downloads/lineages/saccharomycetaceae_odb12",
@@ -55,7 +55,7 @@
         "miniprot_align": "0.18-r281"
     },
     "results": {
-        "one_line_summary": "C:38.6%[S:38.3%,D:0.3%],F:2.0%,M:59.4%,n:3282,E:47.2%",
+        "one_line_summary": "C:38.6%[S:38.3%,D:0.3%],F:2.0%,M:59.4%,n:3282,E:47.3%",
         "Complete percentage": 38.6,
         "Complete BUSCOs": 1267,
         "Single copy percentage": 38.3,
@@ -69,21 +69,21 @@
         "n_markers": 3282,
         "domain": "eukaryota",
         "avg_identity": 0.56,
-        "internal_stop_codon_count": 598,
-        "internal_stop_codon_percent": 47.2,
-        "Number of scaffolds": "1422",
-        "Number of contigs": "1422",
-        "Total length": "11579215",
+        "internal_stop_codon_count": 599,
+        "internal_stop_codon_percent": 47.3,
+        "Number of scaffolds": "97",
+        "Number of contigs": "97",
+        "Total length": "11374711",
         "Percent gaps": "0.000%",
-        "Scaffold N50": "368534",
-        "Contigs N50": "368534"
+        "Scaffold N50": "402447",
+        "Contigs N50": "402447"
     },
     "metrics": {
-        "Number of scaffolds": "1422",
-        "Number of contigs": "1422",
-        "Total length": "11579215",
+        "Number of scaffolds": "97",
+        "Number of contigs": "97",
+        "Total length": "11374711",
         "Percent gaps": "0.000%",
-        "Scaffold N50": "368534",
-        "Contigs N50": "368534"
+        "Scaffold N50": "402447",
+        "Contigs N50": "402447"
     }
 }

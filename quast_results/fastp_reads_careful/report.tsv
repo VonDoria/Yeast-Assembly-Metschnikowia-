@@ -1,11 +1,11 @@
-Assembly	contigs
-# contigs (>= 0 bp)	1269
+Assembly	clean_contigs
+# contigs (>= 0 bp)	94
 # contigs (>= 1000 bp)	65
 # contigs (>= 5000 bp)	50
 # contigs (>= 10000 bp)	45
 # contigs (>= 25000 bp)	40
 # contigs (>= 50000 bp)	36
-Total length (>= 0 bp)	11549191
+Total length (>= 0 bp)	11373587
 Total length (>= 1000 bp)	11353961
 Total length (>= 5000 bp)	11323371
 Total length (>= 10000 bp)	11285266
