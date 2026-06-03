@@ -14,40 +14,6 @@ MEMORY=64                                         # Quantidade de RAM máxima a 
 TRIMMOMATIC_ADAPTERS="/opt/apps/envs/envs/trimmomatic/share/trimmomatic-0.40-0/adapters/TruSeq3-PE.fa"
 
 
-calc_theor_cov() {
-    local fastqc_data_txt="$1"
-    local origin="$2"
-    local output_file="${OUTPUT_DIR}/fastqc_results/theor_cov.txt"
-
-    if [ ! -f "$fastqc_data_txt" ]; then
-        echo "[Aviso] Arquivo $fastqc_data_txt não encontrado. Pulando cobertura para $origin."
-        return 0
-    fi
-
-    local total_sequences=$(grep "Total Sequences" "$fastqc_data_txt" | cut -f2)
-    local raw_length=$(grep "Sequence length" "$fastqc_data_txt" | cut -f2)
-
-    local sequence_length=$(echo "$raw_length" | awk -F'-' '{if(NF==2) print ($1+$2)/2; else print $1}')
-
-    if [ -z "$total_sequences" ] || [ -z "$sequence_length" ] || [ -z "$GENOME_SIZE" ]; then
-        return 1
-    fi
-
-    local teorical_cov=$(awk -v total="$total_sequences" -v len="$sequence_length" -v size="$GENOME_SIZE" 'BEGIN {printf "%.2f", (total * len) / size}')
-
-    if [ ! -f "$output_file" ]; then
-        echo -e "origin\ttotal_sequences\tsequence_length\tgenome_size\tteorical_cov" > "$output_file"
-    fi
-    
-    if grep -q "^${origin}\t" "$output_file"; then
-        return 0
-    fi
-
-    if ! grep -q "^${origin}\t" "$output_file" 2>/dev/null; then
-        echo -e "${origin}\t${total_sequences}\t${raw_length}\t${GENOME_SIZE}\t${teorical_cov}" >> "$output_file"
-    fi
-}
-
 run_fastqc() {
     local INPUT_R1=$1
     local INPUT_R2=$2
@@ -73,9 +39,6 @@ run_fastqc() {
         echo "Executando FastQC em ${INPUT_R1} e ${INPUT_R2}"
         fastqc --extract --threads ${THREADS} --outdir "${OUTDIR}" "${INPUT_R1}" "${INPUT_R2}"
     fi
-
-    calc_theor_cov "${OUTDIR}/${base_r1}_fastqc/fastqc_data.txt" "${INPUT_R1}"
-    calc_theor_cov "${OUTDIR}/${base_r2}_fastqc/fastqc_data.txt" "${INPUT_R2}"
 }
 
 run_fastp() {
@@ -317,12 +280,19 @@ run_assembly_and_eval \
     "${OUTPUT_DIR}/quast_results/trimmomatic_reads_careful" \
     "--careful"
 
-# Cenário 7: Trimmomatic + Isolate + cov-cutoff
+# Cenário 7: Trimmomatic + Isolate + cov-cutoff 80
 run_assembly_and_eval \
     "${TRIM_R1}" "${TRIM_R2}" \
     "${OUTPUT_DIR}/SPAdes_results/trimmomatic_reads_isolate_cutoff_80" \
     "${OUTPUT_DIR}/quast_results/trimmomatic_reads_isolate_cutoff_80" \
     "--isolate --cov-cutoff 80"
+
+# Cenário 8: Trimmomatic + Isolate + cov-cutoff auto
+run_assembly_and_eval \
+    "${TRIM_R1}" "${TRIM_R2}" \
+    "${OUTPUT_DIR}/SPAdes_results/trimmomatic_reads_isolate_cutoff_auto" \
+    "${OUTPUT_DIR}/quast_results/trimmomatic_reads_isolate_cutoff_auto" \
+    "--isolate --cov-cutoff auto"
 
 echo "--------------------------------------------------"
 echo "Avaliando completude das montagens (BUSCO)"
@@ -354,6 +324,10 @@ run_busco_assembly \
 run_busco_assembly \
     "${OUTPUT_DIR}/SPAdes_results/trimmomatic_reads_isolate_cutoff_80/clean_contigs.fasta" \
     "${OUTPUT_DIR}/BUSCO_results/trimmomatic_reads_isolate_cutoff_80"
+    
+run_busco_assembly \
+    "${OUTPUT_DIR}/SPAdes_results/trimmomatic_reads_isolate_cutoff_auto/clean_contigs.fasta" \
+    "${OUTPUT_DIR}/BUSCO_results/trimmomatic_reads_isolate_cutoff_auto"
 
 
 echo "=================================================="
