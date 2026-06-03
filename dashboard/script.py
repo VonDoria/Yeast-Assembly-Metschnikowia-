@@ -3,7 +3,7 @@ import os
 import json
 import statistics
 
-OUTPUT_DIR = "../"
+OUTPUT_DIR = "./"
 DIR_FASTQC = os.path.join(OUTPUT_DIR, "fastqc_results")
 DIR_QUAST = os.path.join(OUTPUT_DIR, "quast_results")
 DIR_SPADES = os.path.join(OUTPUT_DIR, "SPAdes_results")
@@ -59,6 +59,18 @@ def extrair_dados_quast(caminho_tsv):
         "n90": "-", 
         "l50": "-", 
         "l90": "-", 
+        "contigs_0": "-", 
+        "contigs_1000": "-", 
+        "contigs_5000": "-", 
+        "contigs_10000": "-", 
+        "contigs_25000": "-", 
+        "contigs_50000": "-", 
+        "total_bp_0": "-", 
+        "total_bp_1000": "-", 
+        "total_bp_5000": "-", 
+        "total_bp_10000": "-", 
+        "total_bp_25000": "-", 
+        "total_bp_50000": "-", 
     }
     try:
         with open(caminho_tsv, 'r', encoding='utf-8') as f:
@@ -74,6 +86,18 @@ def extrair_dados_quast(caminho_tsv):
                 elif "L50" in h: dados["l50"] = valores[i]
                 elif "L90" in h: dados["l90"] = valores[i]
                 elif "Total length" in h and ">=" not in h: dados["total_bp"] = valores[i]
+                elif "# contigs (>= 0 bp)" in h: dados["contigs_0"] = valores[i]
+                elif "# contigs (>= 1000 bp)" in h: dados["contigs_1000"] = valores[i]
+                elif "# contigs (>= 5000 bp)" in h: dados["contigs_5000"] = valores[i]
+                elif "# contigs (>= 10000 bp)" in h: dados["contigs_10000"] = valores[i]
+                elif "# contigs (>= 25000 bp)" in h: dados["contigs_25000"] = valores[i]
+                elif "# contigs (>= 50000 bp)" in h: dados["contigs_50000"] = valores[i]
+                elif "Total length (>= 0 bp)" in h: dados["total_bp_0"] = valores[i]
+                elif "Total length (>= 1000 bp)" in h: dados["total_bp_1000"] = valores[i]
+                elif "Total length (>= 5000 bp)" in h: dados["total_bp_5000"] = valores[i]
+                elif "Total length (>= 10000 bp)" in h: dados["total_bp_10000"] = valores[i]
+                elif "Total length (>= 25000 bp)" in h: dados["total_bp_25000"] = valores[i]
+                elif "Total length (>= 50000 bp)" in h: dados["total_bp_50000"] = valores[i]
                 elif h in dados: dados[h] = valores[i]
     except Exception: pass
     return dados

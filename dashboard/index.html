@@ -84,6 +84,13 @@
                         <tbody id="spades-tbody" class="text-sm"></tbody>
                     </table>
                 </div>
+                <details class="summary-box mt-4 border border-slate-100 rounded-xl">
+                    <summary class="p-3 text-xs font-bold text-slate-400 cursor-pointer hover:text-indigo-600">VIEW COVERAGE DEFINITIONS ↓</summary>
+                    <div class="p-4 text-xs text-slate-600 leading-relaxed">
+                        <p><strong>Mean Depth:</strong> The average number of times each nucleotide was sequenced. Crucial for variant calling accuracy.</p>
+                        <p><strong>MapQ:</strong> Mapping Quality. Higher values mean reads were uniquely and accurately aligned to the assembly.</p>
+                    </div>
+                </details>
             </div>
 
             <div class="bg-white shadow-sm rounded-xl p-6 overflow-hidden">
@@ -153,7 +160,20 @@
             </div>
             <div class="p-6 overflow-y-auto scrollbar-discreta flex-grow bg-gray-50">
                 <div id="spades-plots-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-quast" class="fixed inset-0 bg-slate-900/80 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl w-full max-w-5xl p-8 shadow-2xl">
+            <div class="flex justify-between items-center mb-6">
+                <h3 id="quast-modal-title" class="text-2xl font-black text-slate-800"></h3>
+                <button onclick="closeModal('modal-quast')" class="text-slate-400 hover:text-red-500 text-4xl">&times;</button>
+            </div>
+            <div class="flex gap-8 overflow-y-auto scrollbar-discreta">
+                <div id="quast-plot-contigs" class="h-80"></div>
+                <div id="quast-plot-reads" class="h-80"></div>
             </div>
         </div>
     </div>
@@ -258,7 +278,7 @@
             let htmlQuast = '';
             for (const [cenario, dados] of Object.entries(dadosProjeto.quast)) {
                 htmlQuast += `
-                    <tr class="hover:bg-emerald-100 border-b border-emerald-50 transition-colors">
+                    <tr class="hover:bg-emerald-100 border-b border-emerald-50 cursor-pointer transition-colors" onclick="openQuastModal('${cenario}')">
                         <td class="p-3 font-medium text-emerald-900">${cenario}</td>
                         <td class="p-3 text-center">${dados.total_bp}</td>
                         <td class="p-3 text-center">${dados.contigs_count}</td>
@@ -358,6 +378,26 @@
             document.body.classList.add('modal-active');
         }
 
+        function openQuastModal(id) {
+            const d = dadosProjeto.quast[id];
+            document.getElementById('quast-modal-title').innerText = "Distribution: " + id;
+            
+            const thresholds_contigs = ['contigs_0','contigs_1000','contigs_5000','contigs_10000','contigs_25000','contigs_50000'];
+            const vals_contigs = thresholds_contigs.map(t => parseInt(d[t]) || 0);
+            
+            const thresholds_total_bp = ['total_bp_0','total_bp_1000','total_bp_5000','total_bp_10000','total_bp_25000','total_bp_50000'];
+            const vals_total_bp = thresholds_total_bp.map(t => parseInt(d[t]) || 0);
+            
+            Plotly.newPlot('quast-plot-contigs', [{
+                x: thresholds_contigs, y: vals_contigs, type: 'bar', marker: {color: '#10b981'}
+            }], {title: 'Contig Size Distribution', autosize: false, width: 450, height: 300, margin: {t:40, b:60, l:40, r:50}});
+
+            Plotly.newPlot('quast-plot-reads', [{
+                values: vals_total_bp, labels: thresholds_total_bp, type: 'pie', hole: .4
+            }], {title: 'Read Length Profile', autosize: false, width: 450, height: 300, margin: {t:40, b:10, l:10, r:10}});
+
+            document.getElementById('modal-quast').classList.remove('hidden');
+        }
         // ------------------------------------------------------------
         // SYSTEM RUN LOG STREAM ENGINE & HIGHLIGHTING
         // ------------------------------------------------------------
