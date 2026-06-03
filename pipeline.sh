@@ -194,7 +194,7 @@ run_assembly_and_eval() {
             -o "${SPAdes_OUT}" \
             -m "${MEMORY}" \
             -t "${THREADS}" \
-            "${PARAMS}"
+            ${PARAMS}
     fi
     
     refining_contigs "${INPUT_R1}" "${INPUT_R2}" "${SPAdes_OUT}"
@@ -317,6 +317,13 @@ run_assembly_and_eval \
     "${OUTPUT_DIR}/quast_results/trimmomatic_reads_careful" \
     "--careful"
 
+# Cenário 7: Trimmomatic + Isolate + cov-cutoff
+run_assembly_and_eval \
+    "${TRIM_R1}" "${TRIM_R2}" \
+    "${OUTPUT_DIR}/SPAdes_results/trimmomatic_reads_isolate_cutoff_80" \
+    "${OUTPUT_DIR}/quast_results/trimmomatic_reads_isolate_cutoff_80" \
+    "--isolate --cov-cutoff 80"
+
 echo "--------------------------------------------------"
 echo "Avaliando completude das montagens (BUSCO)"
 
@@ -343,6 +350,10 @@ run_busco_assembly \
 run_busco_assembly \
     "${OUTPUT_DIR}/SPAdes_results/trimmomatic_reads_isolate/clean_contigs.fasta" \
     "${OUTPUT_DIR}/BUSCO_results/trimmomatic_reads_isolate"
+    
+run_busco_assembly \
+    "${OUTPUT_DIR}/SPAdes_results/trimmomatic_reads_isolate_cutoff_80/clean_contigs.fasta" \
+    "${OUTPUT_DIR}/BUSCO_results/trimmomatic_reads_isolate_cutoff_80"
 
 
 echo "=================================================="

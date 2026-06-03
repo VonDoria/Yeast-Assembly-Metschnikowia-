@@ -1,0 +1,23 @@
+Assembly	clean_contigs
+# contigs (>= 0 bp)	37
+# contigs (>= 1000 bp)	27
+# contigs (>= 5000 bp)	12
+# contigs (>= 10000 bp)	7
+# contigs (>= 25000 bp)	3
+# contigs (>= 50000 bp)	0
+Total length (>= 0 bp)	247724
+Total length (>= 1000 bp)	241435
+Total length (>= 5000 bp)	210393
+Total length (>= 10000 bp)	171577
+Total length (>= 25000 bp)	106694
+Total length (>= 50000 bp)	0
+# contigs	37
+Largest contig	49460
+Total length	247724
+GC (%)	47.14
+N50	19429
+N90	2247
+auN	22524.3
+L50	4
+L90	16
+# N's per 100 kbp	0.00
