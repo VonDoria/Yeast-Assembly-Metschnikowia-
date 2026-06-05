@@ -327,7 +327,7 @@ run_busco_assembly \
     
 run_busco_assembly \
     "${OUTPUT_DIR}/SPAdes_results/trimmomatic_reads_isolate_cutoff_auto/clean_contigs.fasta" \
-    "${OUTPUT_DIR}/BUSCO_results/trimmomatic_reads_isolate_cutoff_autosaccharomycetes"
+    "${OUTPUT_DIR}/BUSCO_results/trimmomatic_reads_isolate_cutoff_auto"
 
 
 echo "=================================================="
