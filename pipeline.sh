@@ -185,7 +185,7 @@ run_busco_assembly(){
         mkdir -p "${BUSCO_OUT}"
         echo "[BUSCO] Avaliando em ${BUSCO_OUT}..."
         busco -i "${INPUT}" -o "${BUSCO_OUT}" \
-            -m genome -l saccharomycetaceae_odb12 \
+            -m genome -l saccharomycetes_odb12 \
             -c "${THREADS}" -f # "${PARAMS}"
         
     fi
@@ -327,7 +327,7 @@ run_busco_assembly \
     
 run_busco_assembly \
     "${OUTPUT_DIR}/SPAdes_results/trimmomatic_reads_isolate_cutoff_auto/clean_contigs.fasta" \
-    "${OUTPUT_DIR}/BUSCO_results/trimmomatic_reads_isolate_cutoff_auto"
+    "${OUTPUT_DIR}/BUSCO_results/trimmomatic_reads_isolate_cutoff_autosaccharomycetes"
 
 
 echo "=================================================="
