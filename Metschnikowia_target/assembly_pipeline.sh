@@ -1,5 +1,5 @@
 #!/bin/bash
-# chmod +x pipeline.sh
+# chmod +x assembly_pipeline.sh
 
 # Para a execução se algum comando falhar
 set -e
@@ -116,7 +116,7 @@ refining_contigs(){
     local CLEAN_FINAL_BAM="${SPAdes_OUT}/clean_assemble_mapping.bam"
     local CLEAN_REPORT="${SPAdes_OUT}/clean_assemble_coverage.txt"
 
-    echo "[SKIP] Filtrando contigs menores que 500 Pb."
+    echo "[SKIP] Filtrando contigs menores que 500 pb."
     seqtk seq -L 500 "${CONTIGS}" > "${CLEAN_CONTIGS}"
 
     if [ -f "$CLEAN_REPORT" ]; then
@@ -189,24 +189,6 @@ run_busco_assembly(){
             -c "${THREADS}" -f # "${PARAMS}"
         
     fi
-}
-
-downsampling() {
-    local INPUT_R1=$1
-    local INPUT_R2=$2
-    local THEOR_COV=$3
-
-    local OUTDIR=$(dirname "${INPUT_R1}")
-    local BASE_NAME_R1=$(basename "${INPUT_R1}" | sed -E 's/\.fastq(\.gz)?$//')
-    local BASE_NAME_R2=$(basename "${INPUT_R2}" | sed -E 's/\.fastq(\.gz)?$//')
-
-    local GOAL_COV="80"
-    local PROPORTION=$(awk -v goal_cov="$GOAL_COV" -v theor_cov="$THEOR_COV" 'BEGIN {printf "%.2f", goal_cov / theor_cov}')
-    local SEED="42"
-
-    echo "Subamostrando ${INPUT_R1}"
-    seqtk sample -s${SEED} ${INPUT_R1} ${PROPORTION} | gzip > "${OUTDIR}/${BASE_NAME_R1}_80x.fastq.gz"
-    seqtk sample -s${SEED} ${INPUT_R2} ${PROPORTION} | gzip > "${OUTDIR}/${BASE_NAME_R2}_80x.fastq.gz"
 }
 
 echo "Iniciando QC e Trimagem..."
