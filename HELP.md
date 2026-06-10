@@ -312,7 +312,67 @@ D: = porcentagem dos genes essenciais que foram encontrados inteiros e mais uma 
 F: = porcentagem dos genes essenciais que foram encontrados fragmentados. (valores muito altos podem refletir genoma muito picotado, o que leva a um n50 baixo também)
 M: = porcentagem dos genes essenciais que não foram encontrados, devido a baixa cobertura ou complexidade do genoma.
 
+## blastn
+O blastn compara sequências de nucleotídeos (DNA/RNA) contra outras sequências de nucleotídeos. Se ele tentasse alinhar letra por letra de uma sequência gigante contra outra diretamente, o processo demoraria dias. Por isso, ele usa uma heurística baseada em sementes (seeds).
 
+**Semeadura (Seeding):** Ele quebra a sua sequência de busca em pedacinhos minúsculos (words) de tamanho fixo.
 
+**Busca por Alvos:** Ele escaneia a sequência de referência procurando por correspondências exatas dessas palavras.
+
+**Extensão:** Ao achar uma correspondência (um hit), o algoritmo tenta estender o alinhamento para a esquerda e para a direita, dando pontos positivos para letras iguais (matches) e penalidades para letras diferentes (mismatches) ou lacunas (gaps).
+
+**Filtragem:** Alinhamentos estatisticamente fracos são descartados, e os melhores são reportados no seu arquivo de saída.
+
+#### Parâmetros:
+
+**-query:** Define o arquivo FASTA contendo a sequência que você tem em mãos e quer investigar (a "query").
+
+**-subject:** Define o arquivo FASTA contendo a sequência de referência onde a busca será feita (o "banco de dados" ou feature). Nota técnica: Usar -subject é ótimo para comparar um arquivo contra o outro diretamente sem precisar indexar um banco de dados com makeblastdb antes.
+
+**-out:** O nome e caminho do arquivo onde o BLAST vai salvar os resultados gerados.
+
+**-evalue:** O limite do Expect Value (Valor E). Ele é uma métrica estatística que diz quantos alinhamentos com aquela pontuação você esperaria encontrar ao acaso naquele banco de dados. Quanto menor o número (ex: 1e-5, 1e-20 ou 0.0), mais confiável é o alinhamento. Se o BLAST achar um hit com E-value maior do que o seu corte, ele simplesmente omite do resultado. (ex: -evalue 0.001)
+
+**-word_size:** É o tamanho daquela "word" inicial da semeadura. Para o blastn padrão, o valor padrão é 11. Se você reduzir esse número (ex: para 7), o BLAST se torna muito mais sensível, encontrando sequências mais distantes evolutivamente, porém o processo fica mais lento. Se aumentar, ele fica rápido, mas só acha sequências muito idênticas.
+
+**-dust:** Ativa/Desativa o filtro DUST para regiões de baixa complexidade genética (como repetições do tipo AAAAAAA ou ATATATAT). Passar -dust yes mascara essas regiões para evitar falsos positivos biológicos. Passar -dust no desativa o filtro, permitindo alinhar repetições (comum em genomas mitocondriais que têm regiões repetitivas nas bordas).
+
+**-outfmt:** Expecifia o formato tabelado para os resultado e a ordem das colunas que serão geradas. (ex: -outfmt '6 qseqid sseqid qcovs pident evalue score qstart qend sstart send')
+
+#### Resultados:
+
+**qseqid:** Query Sequence ID: O nome da sua sequência query.
+**sseqid:** Subject Sequence ID: O nome do contig/referência onde ela grudou.
+**qcovs:** Query Coverage per Subject: Qual porcentagem da sua query conseguiu alinhar no alvo (vai de 0 a 100%). Excelente para ver se o gene está inteiro.
+**pident:** Percentage of Identical Matches: A identidade. De todas as bases alinhadas, qual a porcentagem de letras idênticas (ex: 98.5%).
+**evalue:** Expect value: A significância estatística do hit (quanto menor, melhor).
+**score:** Bit Score: A pontuação bruta do alinhamento baseada na matriz de pontos. Não depende do tamanho do banco de dados.
+**qstart:** Posição (número da base) onde o alinhamento começa na sua sequência Query.
+**qend:** Posição onde o alinhamento termina na sua sequência Query.
+**sstart:** Posição onde o alinhamento começa na sequência Subject (contig).
+**send:** Posição onde o alinhamento termina na sequência Subject (contig).
+
+## Conda
+
+**Comando**
+```bash
+which python # Mostra de qual ambiente a ferramenta está sendo usada.
+```
+
+```bash
+conda info --envs # Lista todos os ambientes.
+```
+
+```bash
+conda activate python_env # Ativa o ambiente.
+```
+
+```bash
+conda list biopython # Lista todas as versões do programa instaladas no ambiente atual.
+```
+
+```bash
+conda install -c conda-forge biopython # Instala um novo programa.
+```
 
 
