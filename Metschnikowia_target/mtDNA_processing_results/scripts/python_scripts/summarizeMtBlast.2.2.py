@@ -85,9 +85,9 @@ def getGCandLength(contig, records):
         return "No Matches", "No Matches"
     elif len(matches) == 1:
         seq_length = len(matches[0].seq)
-        gc = SeqUtils.GC(matches[0].seq)
+        gc_global, gc_1, gc_2, gc_3 = SeqUtils.GC123(matches[0].seq)
         
-        return seq_length, gc
+        return seq_length, gc_global
     else:
         return "Multiple Matches", "Multiple Matches"
 
@@ -133,7 +133,7 @@ def main():
     outFileName = os.path.basename(inBlastResults)
     outFileName = os.path.splitext(outFileName)[0] + ".results_summary.txt"
     
-    summarizeResults(outFileName, contigs, records, blast_results)
+    summarizeResults(f"{os.path.dirname(inBlastResults)}/{outFileName}", contigs, records, blast_results)
 
 main()
 
