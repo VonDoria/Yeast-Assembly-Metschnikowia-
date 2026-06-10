@@ -110,5 +110,42 @@ fi
 
 echo "Busca Contig Query completa. (Blast 2)"
 
+echo "-------------------------------------------------------"
+
+echo "Extraindo contigs mitocondriais."
+
+if [ -f "${CONTIGSDIR}/found_mito_contig.fasta" ]; then
+    echo "Contigs mitocondriais já extraidos."
+else
+    echo "Gerando lista de contigs a serem extraidos."
+    awk 'NR > 1 {print $1}' "${ASSEMBLY_RESULTS_PATH}".blast_1.contig_query.cov_filtered.results_summary.txt | uniq >> "${RESULTSDIR}"/mito_contigs_id_list.txt
+    awk 'NR > 1 {print $1}' "${ASSEMBLY_RESULTS_PATH}".blast_2.contig_query.cov_filtered.results_summary.txt | uniq >> "${RESULTSDIR}"/mito_contigs_id_list.txt
+
+    seqtk subseq "$ASSEMBLY_PATH" "${RESULTSDIR}"/mito_contigs_id_list.txt > "${CONTIGSDIR}"/found_mito_contig.fasta
+    echo "Contigs mitocondriais salvos em: ${CONTIGSDIR}/found_mito_contig.fasta"
+fi
+
+echo "-------------------------------------------------------"
+
+echo "Iniciando montagem de genoma mitocondrial com NOVOPlasty."
+
+if [ -d "${RESULTSDIR}/NOVOPlasty_results" ]; then
+    echo "Montagem de genoma motocondrial já realizada."
+else
+    perl "${BASEDIR}/mtDNA_processing_results/scripts/NOVOPlasty_scripts/NOVOPlasty.pl" -c "${BASEDIR}/mtDNA_processing_results/scripts/NOVOPlasty_scripts/config.txt"
+    echo "Montagem disponivel em: ${RESULTSDIR}/NOVOPlasty_results"
+fi
+
+echo "Montagem realizada com sucesso."
+
+
+
+
+
+
+
+
+
+
 
 
