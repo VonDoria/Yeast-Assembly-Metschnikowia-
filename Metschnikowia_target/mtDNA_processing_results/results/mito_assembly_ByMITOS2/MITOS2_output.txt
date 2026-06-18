@@ -1,0 +1,8 @@
+missing:trnL1 
+duplicated:2x cox1 2x cob 2x trnR 3x trnM 2x trnT 2x rrnL 
+non standard:3x lagli 1x atp9 
+translational exceptions:
+	cob,1,23,700 (ATT, None)
+	lagli,1,4150,4260 (AAA, None)
+	nad3,1,11567,11911 (ACA, AAT)
+	cob,1,24876,25361 (None, GTA)
