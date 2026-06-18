@@ -375,4 +375,8 @@ conda list biopython # Lista todas as versões do programa instaladas no ambient
 conda install -c conda-forge biopython # Instala um novo programa.
 ```
 
+```bash
+conda remove -n ENV_NAME --all # Apaga um ambiente.
+```
+
 

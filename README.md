@@ -22,8 +22,3 @@ Ao final do processo, foi repetido o processo de montagem para as reads trimadas
 
 
 
-
-
-
-
-
