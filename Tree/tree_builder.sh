@@ -45,7 +45,7 @@ else
     python $SCRIPTDIR/concatenate_alignments.py $OUTPUT_DIR $SEQ_TYPE
 fi
 
-if [ -d "${OUTPUT_DIR}/arvore_metschnikowia" ]; then
+if [ -f "${OUTPUT_DIR}/arvore_metschnikowia.treefile" ]; then
     echo "Árvore filogenética já criada."
 else
     echo "[IQ-TREE] Iniciando a montagem da árvore filogenética..."
@@ -57,6 +57,27 @@ else
     
     echo "Árvore Filogenética gerada com sucesso!"
     echo "-> Arquivo final da árvore (formato Newick): ${OUTPUT_DIR}/arvore_metschnikowia.treefile"
+fi
+
+
+if [ -f "${OUTPUT_DIR}/fastani.out" ]; then
+    echo "Matriz de identidade já criada."
+else
+    echo "[fastANI] Avaliando identidade média de nucleotídeos."
+    echo "Criando lista de caminhos para o fastANI..."
+
+    echo "../Metschnikowia_target/SPAdes_results/trimmomatic_reads_isolate/clean_contigs.fasta" > genomes_path.txt
+
+    find "../NCBI_Metschnikowias_assemblys" -type f -name "*.fna" | while read -r genome_file; do
+        echo "$genome_file" >> genomes_path.txt
+    done
+
+    echo "Executando o FastANI..."
+    fastANI --ql genomes_path.txt --rl genomes_path.txt -o "${OUTPUT_DIR}/fastani.out"
+
+    rm genomes_path.txt    
+    
+    echo "-> Arquivo final de identidade de nucleotídeos disponível em: ${OUTPUT_DIR}/fastani.out"
 fi
 
 
